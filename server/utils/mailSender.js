@@ -10,6 +10,11 @@ import nodemailer from 'nodemailer';
  * @returns {Promise<Object>} Send email result promise
  */
 export const sendMail = async ({ name, email, subject, message }) => {
+  // Validate email environment variables
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('Email credentials (EMAIL_USER, EMAIL_PASS) are missing.');
+  }
+
   // Create transporter with Gmail SMTP
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -18,6 +23,14 @@ export const sendMail = async ({ name, email, subject, message }) => {
       pass: process.env.EMAIL_PASS,
     },
   });
+
+  // Verify connection configuration
+  try {
+    await transporter.verify();
+  } catch (error) {
+    console.error('Nodemailer verification failed:', error);
+    throw new Error(`SMTP verification failed: ${error.message}`);
+  }
 
   const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC';
 
@@ -154,5 +167,10 @@ export const sendMail = async ({ name, email, subject, message }) => {
     `,
   };
 
-  return await transporter.sendMail(mailOptions);
+  try {
+    return await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Nodemailer sendMail failed:', error);
+    throw new Error(`Email delivery failed: ${error.message}`);
+  }
 };

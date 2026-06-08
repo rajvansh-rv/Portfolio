@@ -57,7 +57,7 @@ export const handleContactSubmit = async (req, res, next) => {
       message: 'Message sent successfully',
     });
   } catch (error) {
-    console.error('Error handling contact form submission:', error);
+    console.error(error);
     
     // Check for mongoose validation error specifically
     if (error.name === 'ValidationError') {
@@ -66,6 +66,6 @@ export const handleContactSubmit = async (req, res, next) => {
     }
     
     // Generic controller failure error handler
-    return next(new AppError('Failed to send message', 500));
+    return next(new AppError('Email delivery failed', 500));
   }
 };

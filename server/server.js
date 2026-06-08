@@ -17,25 +17,12 @@ app.set('trust proxy', 1);
 // Security headers
 app.use(helmet());
 
-// Production-ready CORS setup
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'http://localhost:3000'
-].filter(Boolean);
-
+// CORS configuration
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow non-browser requests (e.g. Server-to-Server, curl)
-    if (!origin) return callback(null, true);
-    
-    // Check if origin is allowed or if in development environment
-    const isAllowed = allowedOrigins.includes(origin) || allowedOrigins.includes('*') || process.env.NODE_ENV !== 'production';
-    if (isAllowed) {
-      return callback(null, true);
-    }
-    return callback(new Error('Blocked by CORS policy'));
-  },
+  origin: [
+    'http://localhost:5173',
+    'https://rajvansh-singh.netlify.app'
+  ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
