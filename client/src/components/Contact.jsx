@@ -8,9 +8,6 @@ export default function Contact() {
   const [status, setStatus] = useState('idle'); // 'idle', 'submitting', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Handle environment variables for API
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -34,7 +31,7 @@ export default function Contact() {
         subject: 'New Portfolio Contact Form Submission' // Satisfies backend validation requirement
       };
 
-      const response = await fetch(`${API_URL}/contact`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,19 +39,24 @@ export default function Contact() {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Failed to parse server response');
+      }
 
       if (response.ok && data.success) {
         setStatus('success');
         setFormData({ name: '', email: '', message: '' });
       } else {
         setStatus('error');
-        setErrorMessage(data.message || 'Something went wrong. Please try again.');
+        setErrorMessage(data.message || 'Email delivery failed');
       }
     } catch (err) {
       console.error('Contact submission error:', err);
       setStatus('error');
-      setErrorMessage('Failed to connect to the server. Please check your network connection.');
+      setErrorMessage(err.message || 'Email delivery failed');
     }
   };
 
@@ -223,7 +225,7 @@ export default function Contact() {
                     className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl text-xs flex items-center gap-2 font-display"
                   >
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    Thank you! Your message was submitted successfully.
+                    Thank you for reaching out. Your message has been sent successfully.
                   </motion.div>
                 )}
 
@@ -252,8 +254,12 @@ export default function Contact() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    SECURED SUBMISSION...
+                    Sending...
                   </>
+                ) : status === 'success' ? (
+                  'Message Sent ✓'
+                ) : status === 'error' ? (
+                  'Failed'
                 ) : (
                   <>
                     Send Message
