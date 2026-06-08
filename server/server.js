@@ -38,9 +38,38 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy and active' });
 });
 
-// Root path handler
-app.get('/', (req, res) => {
-  res.send('Rajvansh Singh Atal Portfolio API is running.');
+// Temporary Diagnostics Endpoint
+import nodemailer from 'nodemailer';
+app.get('/api/debug-status', async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected (State: ' + mongoose.connection.readyState + ')';
+  let emailStatus = 'Not tested';
+  let emailError = null;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    await transporter.verify();
+    emailStatus = 'Verified successfully';
+  } catch (err) {
+    emailStatus = 'Verification failed';
+    emailError = err.message;
+  }
+
+  res.json({
+    dbStatus,
+    emailStatus,
+    emailError,
+    envKeysPresent: {
+      EMAIL_USER: !!process.env.EMAIL_USER,
+      EMAIL_PASS: !!process.env.EMAIL_PASS,
+      MONGODB_URI: !!process.env.MONGODB_URI,
+    }
+  });
 });
 
 // Global Error Handler Middleware
